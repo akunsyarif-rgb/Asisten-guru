@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     .single();
 
   if (jobError || !jobRow) {
+    console.error("Failed to insert generation_jobs row:", jobError);
     return NextResponse.json({ message: "Gagal membuat generation job." }, { status: 500 });
   }
 
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
 
   const { error: itemsError } = await supabase.from("generation_items").insert(itemRows);
   if (itemsError) {
+    console.error("Failed to insert generation_items rows:", itemsError);
     return NextResponse.json({ message: "Gagal membuat generation items." }, { status: 500 });
   }
 
