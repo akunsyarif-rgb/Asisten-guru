@@ -3,7 +3,7 @@
  * talks to `lib/ai/provider.ts` only — swapping the provider/model here
  * never touches business logic, prompts, or validation.
  */
-export type AiProviderName = "openai" | "anthropic" | "mock";
+export type AiProviderName = "openai" | "anthropic" | "gemini" | "mock";
 
 export const aiConfig = {
   provider: (process.env.AI_PROVIDER as AiProviderName | undefined) ?? "mock",
@@ -14,6 +14,10 @@ export const aiConfig = {
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY ?? "",
     model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY ?? "",
+    model: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
   },
   rateLimitPerHour: envInt("GENERATION_RATE_LIMIT_PER_HOUR", 30),
 } as const;

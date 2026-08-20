@@ -1,6 +1,7 @@
 import { aiConfig } from "@/config/ai";
 import { openaiAdapter } from "./adapters/openai";
 import { anthropicAdapter } from "./adapters/anthropic";
+import { geminiAdapter } from "./adapters/gemini";
 import { mockAdapter } from "./adapters/mock";
 
 export interface ModelCompletionRequest {
@@ -20,9 +21,9 @@ export interface ModelCompletionResult {
 /**
  * Model Adapter contract (blueprint section 06.1):
  * AI Provider -> Model Adapter -> Prompt Engine -> Generation Service.
- * Every adapter (OpenAI, Anthropic, mock) implements exactly this shape, so
- * switching providers/models is a config change, never a business-logic
- * change.
+ * Every adapter (OpenAI, Anthropic, Gemini, mock) implements exactly this
+ * shape, so switching providers/models is a config change, never a
+ * business-logic change.
  */
 export interface ModelAdapter {
   readonly name: string;
@@ -32,6 +33,7 @@ export interface ModelAdapter {
 const adapters: Record<string, ModelAdapter> = {
   openai: openaiAdapter,
   anthropic: anthropicAdapter,
+  gemini: geminiAdapter,
   mock: mockAdapter,
 };
 
