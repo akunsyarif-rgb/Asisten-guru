@@ -36,8 +36,11 @@ Disclosure — tidak berpura-pura ada fitur yang belum benar-benar ada.
      project Supabase Anda.
    - `AI_PROVIDER=mock` untuk mencoba seluruh alur (wizard → generate → editor → export) tanpa
      API key AI apa pun — adapter mock bersifat deterministik dan tidak pernah mengarang data
-     (lihat `lib/ai/adapters/mock.ts`). Set ke `openai` atau `anthropic` beserta API key-nya untuk
-     generation sungguhan.
+     (lihat `lib/ai/adapters/mock.ts`), tapi outputnya hanya menampilkan ulang data form, bukan
+     dokumen tersusun AI. Untuk generation sungguhan, set `AI_PROVIDER=gemini` +
+     `GEMINI_API_KEY` (gratis, tanpa kartu kredit, ambil di
+     [aistudio.google.com/apikey](https://aistudio.google.com/apikey)), atau `openai`/`anthropic`
+     beserta API key-nya (berbayar).
 3. Jalankan migration di `supabase/migrations/` pada project Supabase Anda (lewat Supabase CLI atau
    SQL editor), lalu aktifkan **Google** sebagai provider di Supabase Auth.
 4. `npm run dev` lalu buka `http://localhost:3000`.
