@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import { parse, NodeType, type HTMLElement } from "node-html-parser";
 import {
   Document,
   Packer,
@@ -14,15 +14,21 @@ import {
 /**
  * Converts a document's sanitized HTML (the MVP output contract, section
  * 10) into a .docx buffer. Walks the DOM directly rather than string
- * regexes, so nested lists/tables survive the conversion.
+ * regexes, so nested lists/tables survive the conversion. Uses
+ * node-html-parser (pure JS, no native DOM) instead of jsdom to avoid
+ * jsdom's transitive dependency on ESM-only packages breaking under
+ * Vercel's serverless require() runtime.
  */
 export async function htmlToDocxBuffer(title: string, html: string): Promise<Buffer> {
-  const dom = new JSDOM(`<!doctype html><body>${html}</body>`);
-  const body = dom.window.document.body;
+  const root = parse(html);
+
+  const topLevelElements = root.childNodes.filter(
+    (node): node is HTMLElement => node.nodeType === NodeType.ELEMENT_NODE,
+  );
 
   const children = [
     new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
-    ...Array.from(body.children).flatMap((el) => elementToDocxNodes(el)),
+    ...topLevelElements.flatMap((el) => elementToDocxNodes(el)),
   ];
 
   const doc = new Document({
@@ -32,8 +38,8 @@ export async function htmlToDocxBuffer(title: string, html: string): Promise<Buf
   return Packer.toBuffer(doc);
 }
 
-function elementToDocxNodes(el: Element): (Paragraph | Table)[] {
-  const tag = el.tagName.toLowerCase();
+function elementToDocxNodes(el: HTMLElement): (Paragraph | Table)[] {
+  const tag = el.tagName?.toLowerCase() ?? "";
   const text = el.textContent?.trim() ?? "";
 
   switch (tag) {
@@ -49,7 +55,7 @@ function elementToDocxNodes(el: Element): (Paragraph | Table)[] {
       return text ? [new Paragraph({ children: [new TextRun(text)] })] : [];
     case "ul":
     case "ol":
-      return Array.from(el.querySelectorAll("li")).map(
+      return el.querySelectorAll("li").map(
         (li) =>
           new Paragraph({
             text: li.textContent?.trim() ?? "",
@@ -63,16 +69,17 @@ function elementToDocxNodes(el: Element): (Paragraph | Table)[] {
   }
 }
 
-function elementToDocxTable(tableEl: Element): Table {
-  const rows = Array.from(tableEl.querySelectorAll("tr")).map((tr) => {
-    const cells = Array.from(tr.querySelectorAll("th,td")).map(
+function elementToDocxTable(tableEl: HTMLElement): Table {
+  const rows = tableEl.querySelectorAll("tr").map((tr) => {
+    const cells = tr.querySelectorAll("th,td");
+    const docxCells = cells.map(
       (cell) =>
         new TableCell({
           children: [new Paragraph(cell.textContent?.trim() ?? "")],
-          width: { size: 100 / Math.max(tr.children.length, 1), type: WidthType.PERCENTAGE },
+          width: { size: 100 / Math.max(cells.length, 1), type: WidthType.PERCENTAGE },
         }),
     );
-    return new TableRow({ children: cells });
+    return new TableRow({ children: docxCells });
   });
 
   return new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } });

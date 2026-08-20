@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "p", "ul", "ol", "li", "strong", "em", "u",
@@ -28,9 +28,9 @@ export interface ContentValidationResult {
 export function validateContent(html: string): ContentValidationResult {
   const issues: ContentValidationIssue[] = [];
 
-  const sanitizedHtml = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: [],
+  const sanitizedHtml = sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {},
   });
 
   if (sanitizedHtml.trim().length < MIN_HTML_LENGTH) {
