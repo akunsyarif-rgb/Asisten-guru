@@ -1,5 +1,6 @@
 import { createServerClient, type SetAllCookies } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isSupabaseConfigured } from "./config";
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
@@ -8,6 +9,16 @@ const PUBLIC_PATHS = ["/login", "/auth/callback"];
  * everything except the login/callback routes. Called from middleware.ts.
  */
 export async function updateSession(request: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    if (request.nextUrl.pathname.startsWith("/setup")) {
+      return NextResponse.next({ request });
+    }
+    const setupUrl = request.nextUrl.clone();
+    setupUrl.pathname = "/setup";
+    setupUrl.search = "";
+    return NextResponse.redirect(setupUrl);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
